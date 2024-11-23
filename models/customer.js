@@ -6,6 +6,8 @@ const Reservation = require("./reservation");
 /** Customer of the restaurant. */
 
 class Customer {
+  #hiddenNotes;
+
   constructor({ id, firstName, lastName, phone, notes }) {
     this.id = id;
     this.firstName = firstName;
@@ -14,14 +16,28 @@ class Customer {
     this.notes = notes;
   }
 
+  /** Get the full name of the customer. */
+  get fullName(){
+    return `${this.firstName} ${this.lastName}`
+  }
+
+  /** Getter and setter for notes */
+  get notes() {
+    return this.#hiddenNotes
+  }
+
+  set notes(value){
+    this.#hiddenNotes = value || ""
+  }
+
   /** find all customers. */
 
   static async all() {
     const results = await db.query(
-      `SELECT id, 
-         first_name AS "firstName",  
-         last_name AS "lastName", 
-         phone, 
+      `SELECT id,
+         first_name AS "firstName",
+         last_name AS "lastName",
+         phone,
          notes
        FROM customers
        ORDER BY last_name, first_name`
@@ -33,11 +49,11 @@ class Customer {
 
   static async get(id) {
     const results = await db.query(
-      `SELECT id, 
-         first_name AS "firstName",  
-         last_name AS "lastName", 
-         phone, 
-         notes 
+      `SELECT id,
+         first_name AS "firstName",
+         last_name AS "lastName",
+         phone,
+         notes
         FROM customers WHERE id = $1`,
       [id]
     );
@@ -51,6 +67,42 @@ class Customer {
     }
 
     return new Customer(customer);
+  }
+
+  /** Find customers by name */
+  static async searchByName(name) {
+    const results = await db.query(
+      `SELECT id,
+              first_name AS "firstName",
+              last_name as "lastName",
+              phone,
+              notes
+      FROM customers
+      WHERE first_name ILIKE $1 or last_name ILIKE $1
+      ORDER BY last_name, first_name`,
+      [`%${name}%`]
+    )
+    return results.rows.map(c => new Customer(c))
+  }
+
+  static async getBestCustomers() {
+    const results = await db.query(
+      `SELECT customers.id,
+              first_name AS "firstName",
+              last_name AS "lastName",
+              COUNT(reservations.id) AS "reservationCount"
+      FROM customers
+      LEFT JOIN reservations ON customers.id = reservations.customer_id
+      GROUP BY customers.id
+      ORDER BY "reservationCount" DESC
+      LIMIT 10`
+    );
+
+    return results.rows.map(c => {
+      const customer = new Customer(c)
+      customer.reservationCount = c.reservationCount
+      return customer
+    })
   }
 
   /** get all reservations for this customer. */

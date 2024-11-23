@@ -89,6 +89,27 @@ router.post("/:id/edit/", async function(req, res, next) {
   }
 });
 
+/** Search for customers by name */
+router.get("/search", async (req,res,next) => {
+  try {
+    const name = req.query.name || ""
+    const customers = await Customer.searchByName(name)
+    return res.sender("customer_list.html", { customers })
+  } catch(err){
+    return next(err)
+  }
+})
+
+/** Get the best customers */
+router.get("/best", async (req,res,next) => {
+  try {
+    const bestCustomers = await Customer.getBestCustomers()
+    return res.render("best_customers.html", {bestCustomers})
+  } catch(err){
+    return next(err)
+  }
+})
+
 /** Handle adding a new reservation. */
 
 router.post("/:id/add-reservation/", async function(req, res, next) {

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Best Customers{% endblock %}
+{% block content %}
+
+<h1>Top 10 Customers</h1>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Rank</th>
+      <th>Name</th>
+      <th>Reservations</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for customer in bestCustomers %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td><a href="/{{ customer.id }}">{{ customer.fullName }}</a></td>
+      <td>{{ customer.reservationCount }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<a href="/" class="btn btn-secondary">Back to Customers</a>
+{% endblock %}
